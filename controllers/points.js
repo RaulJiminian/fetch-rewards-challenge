@@ -5,16 +5,24 @@ const queue = [];
 export const addPoints = (req, res) => {
   const { payer, points } = req.body;
 
-  let found = queue.find((current) => {
-    if (current.payer === payer) {
-      current.points += points;
-      return current;
-    }
-  });
+  // Previous Iteration commented out for comparison purposes only
+  // let found = queue.find((current) => {
+  //   if (current.payer === payer) {
+  //     current.points += points;
+  //     return current;
+  //   }
+  // });
 
-  if (!found) {
+  // if (!found) {
+  //   queue.push(req.body);
+  //   insertionSort(queue);
+  // }
+
+  if (points > 0) {
     queue.push(req.body);
     insertionSort(queue);
+  } else {
+    res.status(400).send("Cannot enter a negative balance for points");
   }
 
   res.json(queue);
@@ -22,6 +30,11 @@ export const addPoints = (req, res) => {
 
 export const spendPoints = (req, res) => {
   let { points } = req.body;
+
+  if (points < 0) {
+    res.status(400).send("Points cannot be negative.");
+  }
+
   const list = [];
 
   queue.forEach((currentPayer) => {
@@ -56,6 +69,10 @@ export const spendPoints = (req, res) => {
     }
   });
 
+  if (list.length === 0) {
+    res.status(400).send("No transactions presents. Please add transactions before spending points");
+  }
+
   res.json(list);
 };
 
@@ -64,7 +81,8 @@ export const getPoints = (req, res) => {
 
   queue.forEach((currentPayer) => {
     let { payer, points } = currentPayer;
-    balance[payer] = points;
+
+    balance[payer] = (balance[payer] || 0) + points;
   });
 
   res.json(balance);
